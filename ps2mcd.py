@@ -18,7 +18,7 @@ def main():
 
         print(mc.files_to_string())
 
-        # if args.list:
+        mc.write_all_to_disk(out_dir)
 
     except Exception as e:
         print(f"Failed to dump files: {e}")
@@ -26,11 +26,16 @@ def main():
     print("Done")
 
 def set_out_dir(args) -> Path:
-    if args.dir != None:
-        return Path(args.dir)
+    if args.dir != None:    
+        out_path = Path(args.dir).resolve()
     else:
         ext_idx = args.vmc.find('.')
-        return Path(args.vmc[:ext_idx]) if ext_idx != -1 else Path(args.vmc)
+        out_path = Path.cwd() /  Path(args.vmc[:ext_idx]) if ext_idx != -1 else Path(args.vmc)
+
+    # Make sure it exists
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    return out_path
 
 def read_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

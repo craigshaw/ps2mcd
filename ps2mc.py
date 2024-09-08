@@ -1,8 +1,6 @@
 import array
 import struct
 
-from pathlib import Path
-
 from directory import DirectoryEntry
 
 ExpectedFileHeader = "Sony PS2 Memory Card Format "
@@ -47,7 +45,7 @@ class PS2MC():
         fstr = ''
 
         for f in self.files:
-            fstr += f'{f.to_path()}\n'
+            fstr += f'{f.to_path()} {f.length} bytes\n'
 
         return fstr
 
@@ -106,8 +104,6 @@ class PS2MC():
         return d
     
     def _unpack_dirs(self, dbuffer, path):
-        # print(f'Directory entries len: {len(dbuffer)}')
-
         dirs = []
 
         # TODO: Refactor this to work with different cluster sizes and work with a singe entry at a time
@@ -138,3 +134,19 @@ class PS2MC():
         o1 = (cluster_num * self.cs)
         o2 = o1 + self.cs
         return self.img[o1:o2]
+    
+    def _read_file(self, file):
+        f = self._read_file_starting_at_cluster(file.cluster)
+
+        return f[:file.length]
+    
+    def write_all_to_disk(self, dir):
+        for f in self.files:
+            contents = self._read_file(f)
+
+            path = dir / f.to_path()
+
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            with path.open(mode='wb') as fd:
+                fd.write(contents)
