@@ -16,6 +16,10 @@ def main():
 
         print(f'Loaded {args.vmc}\n{mc}')
 
+        print(mc.files_to_string())
+
+        # if args.list:
+
     except Exception as e:
         print(f"Failed to dump files: {e}")
 

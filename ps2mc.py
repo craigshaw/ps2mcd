@@ -1,6 +1,10 @@
 import array
 import struct
 
+from pathlib import Path
+
+from directory import DirectoryEntry
+
 ExpectedFileHeader = "Sony PS2 Memory Card Format "
 
 class UnsupportedFileTypeError(Exception):
@@ -32,9 +36,21 @@ class PS2MC():
         # Extract the FAT
         self.fat = self._flatten_fat()
 
+        # Enumerate all files on the card
+        self.files = self._enumerate_all_files()
+
     def __str__(self) -> str:
         return f'Size: {len(self.img)} bytes\npage len: {self.page_len}\ncluster size: {self.cs}\n' \
-            f'ifc_table: {self.ifc_table}\nfat entries: {len(self.fat)}'
+            f'ifc_table: {self.ifc_table}\nfat entries: {len(self.fat)}\n# files: {len(self.files)}'
+    
+    def files_to_string(self) -> str:
+        fstr = ''
+
+        for f in self.files:
+            fstr += f'{f.to_path()}\n'
+
+        return fstr
+
     
     def _flatten_fat(self) -> list:
         fat = []
@@ -57,6 +73,66 @@ class PS2MC():
                         fat.append(struct.unpack_from('<I', fc, fat_entry)[0])
 
         return fat
+    
+    def _enumerate_all_files(self):
+        files=[]
+        self._read_files_recursive(files, self.dir_root, '')
+        return files
+    
+    def _read_files_recursive(self, files, cluster_num, path):
+        dirs = self._read_directory(cluster_num, path)
+        for d in dirs:
+            if d.is_file():
+                files.append(d)
+            elif d.is_dir() and d.name != '.' and d.name != '..':
+                self._read_files_recursive(files, d.cluster, f'{path}{d.name}/')
+
+    def _read_directory(self, first_cluster_num, path):
+        rd = self._read_file_starting_at_cluster(first_cluster_num)
+        return self._unpack_dirs(rd, path)
+    
+    def _read_file_starting_at_cluster(self, cluster_num):
+        fat_idx = cluster_num
+
+        # Read first cluster
+        d = self._read_allocatable_cluster(cluster_num)
+
+        # Now go through the FAT pulling each cluster until we hit an FF entry
+        while self.fat[fat_idx] != 0xFFFFFFFF:
+            next_cluster_num = (self.fat[fat_idx] & 0x7FFFFFFF)
+            d += self._read_allocatable_cluster(next_cluster_num)
+            fat_idx = next_cluster_num
+
+        return d
+    
+    def _unpack_dirs(self, dbuffer, path):
+        # print(f'Directory entries len: {len(dbuffer)}')
+
+        dirs = []
+
+        # TODO: Refactor this to work with different cluster sizes and work with a singe entry at a time
+        for i in range(len(dbuffer)//1024):
+            dir = self._unpack_directory_entries(dbuffer[(i*1024):(i*1024)+1024])
+            dirs.append(DirectoryEntry(dir[0], path))
+            
+            if dir[1][7].decode('UTF-8').rstrip('\x00') != '':
+                dirs.append(DirectoryEntry(dir[1], path))
+
+        return dirs
+    
+    def _unpack_directory_entries(self, c):
+        # Expects a cluster of multiple 512 byte entries
+        return (self._unpack_directory_entry(c[:512]), self._unpack_directory_entry(c[512:1024]))
+
+    def _unpack_directory_entry(self, b):
+        # Expects a 512 byte buffer
+        return struct.unpack('<H2xI8sII8sH30x32s416x', b)
+    
+    def _read_allocatable_cluster(self, offset):
+        s1 = (self.alloc_offset * self.cs) + (offset * self.cs)
+        s2 = s1 + self.cs
+        # print(f'Reading allocatable cluster from {hex(s1)}:{hex(s2)}')
+        return self.img[s1:s2]
     
     def _read_absolute_cluster(self, cluster_num) -> bytes:
         o1 = (cluster_num * self.cs)
