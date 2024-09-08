@@ -26,7 +26,7 @@ def set_out_dir(args) -> Path:
         return Path(args.dir)
     else:
         ext_idx = args.vmc.find('.')
-        return Path(args.vmc[:ext_idx]) if ext_idx != -1 else args.vmc
+        return Path(args.vmc[:ext_idx]) if ext_idx != -1 else Path(args.vmc)
 
 def read_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
