@@ -27,11 +27,11 @@ class DirectoryEntry():
         self.name = dir_tuple[7].decode('UTF-8').rstrip('\x00')
         self.path = path
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.to_path()} ({"d" if self.is_dir() else "f"}) {self.length} {self.cluster}' \
             f'c:{time.strftime("%b %d %Y %H:%M:%S", self.created)} m:{time.strftime("%b %d %Y %H:%M:%S", self.modified)}'
     
-    def _to_local_time(self, t):
+    def _to_local_time(self, t) -> time.struct_time:
         # Time of Day (8 bytes)
         # Offset	Name	Type	Description
         # 0x01	    sec	    byte	seconds
@@ -45,11 +45,11 @@ class DirectoryEntry():
         unix_time = calendar.timegm((year, t[5], t[4], t[3], t[2], t[1])) - (9*60*60)
         return time.localtime(unix_time)
 
-    def is_file(self):
+    def is_file(self) -> int:
         return self.mode & DF_FILE
     
-    def is_dir(self):
+    def is_dir(self) -> int:
         return self.mode & DF_DIRECTORY
     
-    def to_path(self):
+    def to_path(self) -> Path:
         return Path(self.path) / Path(self.name)
