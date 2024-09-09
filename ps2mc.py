@@ -3,7 +3,9 @@ import struct
 
 from directory import DirectoryEntry
 
-ExpectedFileHeader = "Sony PS2 Memory Card Format "
+EXPECTED_FILE_HEADER = "Sony PS2 Memory Card Format "
+SUPERBLOCK_SIZE = 340
+DIRECTORY_SIZE = 512
 
 class UnsupportedFileTypeError(Exception):
     pass
@@ -14,13 +16,13 @@ class PS2MC():
             self.img = file.read()
 
         # Read the superblock
-        sb = struct.unpack('<28s12sHHHHIIIIII8x128s128sBBH', self.img[:340])
+        sb = struct.unpack('<28s12sHHHHIIIIII8x128s128sBBH', self.img[:SUPERBLOCK_SIZE])
 
-        if sb[0].decode('UTF-8').rstrip('\x00') != ExpectedFileHeader:
+        if sb[0].decode('UTF-8').rstrip('\x00') != EXPECTED_FILE_HEADER:
             raise UnsupportedFileTypeError("File is not a valid PS2 memory card image")
         
         self.path = path
-        self.page_len = sb[2]
+        self.page_size = sb[2]
         self.pages_per_cluster = sb[3]
         self.pages_per_block = sb[4]
         self.clusters_per_card = sb[6]
@@ -30,7 +32,7 @@ class PS2MC():
         self.ifc_table = array.array('I', sb[12])
 
         # Calculate the cluster size
-        self.cs = self.page_len * self.pages_per_cluster
+        self.cs = self.page_size * self.pages_per_cluster
 
         # Extract the FAT
         self.fat = self._flatten_fat()
@@ -39,7 +41,7 @@ class PS2MC():
         self.files = self._enumerate_all_files()
 
     def __str__(self) -> str:
-        return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_len} bytes\nCluster size: {self.cs} bytes\n' \
+        return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_size} bytes\nCluster size: {self.cs} bytes\n' \
             f'Total files: {len(self.files)}\n' + ''.join([f'{f}\n' for f in self.files])
     
     def _flatten_fat(self) -> list:
@@ -98,20 +100,14 @@ class PS2MC():
     def _unpack_dirs(self, dbuffer, path):
         dirs = []
 
-        # TODO: Refactor this to work with different cluster sizes and work with a singe entry at a time
-        for i in range(len(dbuffer)//1024):
-            dir = self._unpack_directory_entries(dbuffer[(i*1024):(i*1024)+1024])
-            dirs.append(DirectoryEntry(dir[0], path))
+        for i in range(len(dbuffer)//DIRECTORY_SIZE):
+            dir = self._unpack_directory_entry(dbuffer[(i*DIRECTORY_SIZE):(i*DIRECTORY_SIZE)+DIRECTORY_SIZE])
             
-            if dir[1][7].decode('UTF-8').rstrip('\x00') != '':
-                dirs.append(DirectoryEntry(dir[1], path))
-
+            if dir[7].decode('UTF-8').rstrip('\x00') != '':
+                dirs.append(DirectoryEntry(dir, path))
+            
         return dirs
     
-    def _unpack_directory_entries(self, c):
-        # Expects a cluster of multiple 512 byte entries
-        return (self._unpack_directory_entry(c[:512]), self._unpack_directory_entry(c[512:1024]))
-
     def _unpack_directory_entry(self, b):
         # Expects a 512 byte buffer
         return struct.unpack('<H2xI8sII8sH30x32s416x', b)
@@ -119,7 +115,6 @@ class PS2MC():
     def _read_allocatable_cluster(self, offset):
         s1 = (self.alloc_offset * self.cs) + (offset * self.cs)
         s2 = s1 + self.cs
-        # print(f'Reading allocatable cluster from {hex(s1)}:{hex(s2)}')
         return self.img[s1:s2]
     
     def _read_absolute_cluster(self, cluster_num) -> bytes:
