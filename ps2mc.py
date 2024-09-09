@@ -19,6 +19,7 @@ class PS2MC():
         if sb[0].decode('UTF-8').rstrip('\x00') != ExpectedFileHeader:
             raise UnsupportedFileTypeError("File is not a valid PS2 memory card image")
         
+        self.path = path
         self.page_len = sb[2]
         self.pages_per_cluster = sb[3]
         self.pages_per_block = sb[4]
@@ -38,17 +39,8 @@ class PS2MC():
         self.files = self._enumerate_all_files()
 
     def __str__(self) -> str:
-        return f'Size: {len(self.img)} bytes\npage len: {self.page_len}\ncluster size: {self.cs}\n' \
-            f'ifc_table: {self.ifc_table}\nfat entries: {len(self.fat)}\n# files: {len(self.files)}'
-    
-    def files_to_string(self) -> str:
-        fstr = ''
-
-        for f in self.files:
-            fstr += f'{f.to_path()} {f.length} bytes\n'
-
-        return fstr
-
+        return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_len} bytes\nCluster size: {self.cs} bytes\n' \
+            f'Total files: {len(self.files)}\n' + ''.join([f'{f}\n' for f in self.files])
     
     def _flatten_fat(self) -> list:
         fat = []

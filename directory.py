@@ -28,8 +28,8 @@ class DirectoryEntry():
         self.path = path
 
     def __str__(self) -> str:
-        return f'{self.to_path()} ({"d" if self.is_dir() else "f"}) {self.length} {self.cluster}' \
-            f'c:{time.strftime("%b %d %Y %H:%M:%S", self.created)} m:{time.strftime("%b %d %Y %H:%M:%S", self.modified)}'
+        return f'{self.length:<10} {time.strftime("%b %d %Y %H:%M:%S", self.created):<23}' \
+            f' {time.strftime("%b %d %Y %H:%M:%S", self.modified):<23} {self.to_path()}'
     
     def _to_local_time(self, t) -> time.struct_time:
         # Time of Day (8 bytes)

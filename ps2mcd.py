@@ -10,20 +10,16 @@ def main():
 
     try:
         out_dir = set_out_dir(args)
-        print(f'Output will be written to {out_dir}')
 
         mc = PS2MC(args.vmc)
 
-        print(f'Loaded {args.vmc}\n{mc}')
-
-        print(mc.files_to_string())
-
-        mc.write_all_to_disk(out_dir)
+        if args.list:
+            print(mc)
+        else:
+            mc.write_all_to_disk(out_dir)
 
     except Exception as e:
         print(f"Failed to dump files: {e}")
-
-    print("Done")
 
 def set_out_dir(args) -> Path:
     if args.dir != None:    
