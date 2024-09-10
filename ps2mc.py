@@ -6,22 +6,34 @@ from directory import DirectoryEntry
 EXPECTED_FILE_HEADER = "Sony PS2 Memory Card Format "
 SUPERBLOCK_SIZE = 340
 DIRECTORY_SIZE = 512
+VALID_PAGE_SIZES = [512,1024]
 
 class UnsupportedFileTypeError(Exception):
     pass
 
 class PS2MC():
     def __init__(self, path):
+        self.path = path
+
         with open(path, mode='rb') as file:
             self.img = file.read()
 
-        # Read the superblock
+        # Unpack the superblock
         sb = struct.unpack('<28s12sHHHHIIIIII8x128s128sBBH', self.img[:SUPERBLOCK_SIZE])
-
-        if sb[0].decode('UTF-8').rstrip('\x00') != EXPECTED_FILE_HEADER:
-            raise UnsupportedFileTypeError("File is not a valid PS2 memory card image")
         
-        self.path = path
+        self._unpack_and_validate(sb)
+
+        # Extract the FAT
+        self.fat = self._flatten_fat()
+
+        # Enumerate all files on the card
+        self.files = self._enumerate_all_files()
+
+    def __str__(self) -> str:
+        return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_size} bytes\nCluster size: {self.cs} bytes\n' \
+            f'Total files: {len(self.files)}\n' + ''.join([f'{f}\n' for f in self.files])
+    
+    def _unpack_and_validate(self, sb):
         self.page_size = sb[2]
         self.pages_per_cluster = sb[3]
         self.pages_per_block = sb[4]
@@ -34,16 +46,15 @@ class PS2MC():
         # Calculate the cluster size
         self.cs = self.page_size * self.pages_per_cluster
 
-        # Extract the FAT
-        self.fat = self._flatten_fat()
+        # Validate what we've got
+        if sb[0].decode('UTF-8').rstrip('\x00') != EXPECTED_FILE_HEADER:
+            raise UnsupportedFileTypeError("File is not a valid PS2 memory card image")
 
-        # Enumerate all files on the card
-        self.files = self._enumerate_all_files()
+        if self.page_size not in VALID_PAGE_SIZES or \
+           self.page_size == 512 and not (self.pages_per_cluster == 1 or self.pages_per_cluster == 2) or \
+           self.page_size == 1024 and self.pages_per_cluster != 1:
+               raise UnsupportedFileTypeError("Unsupported memory card geometry")
 
-    def __str__(self) -> str:
-        return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_size} bytes\nCluster size: {self.cs} bytes\n' \
-            f'Total files: {len(self.files)}\n' + ''.join([f'{f}\n' for f in self.files])
-    
     def _flatten_fat(self) -> list:
         fat = []
 
