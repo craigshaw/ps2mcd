@@ -7,6 +7,7 @@ EXPECTED_FILE_HEADER = "Sony PS2 Memory Card Format "
 SUPERBLOCK_SIZE = 340
 DIRECTORY_SIZE = 512
 VALID_PAGE_SIZES = [512,1024]
+ECC_SIZE = 16
 
 class UnsupportedFileTypeError(Exception):
     pass
@@ -45,6 +46,9 @@ class PS2MC():
 
         # Calculate the cluster size
         self.cs = self.page_size * self.pages_per_cluster
+
+        # Work out whether we've got a card with ECCs
+        self.ecc_len = 0 if len(self.img) / self.cs == self.clusters_per_card else 16
 
         # Validate what we've got
         if sb[0].decode('UTF-8').rstrip('\x00') != EXPECTED_FILE_HEADER:
@@ -124,14 +128,25 @@ class PS2MC():
         return struct.unpack('<H2xI8sII8sH30x32s416x', b)
     
     def _read_allocatable_cluster(self, offset):
-        s1 = (self.alloc_offset * self.cs) + (offset * self.cs)
-        s2 = s1 + self.cs
-        return self.img[s1:s2]
+        o1 = (self.alloc_offset * (self.cs + (self.ecc_len*self.pages_per_cluster))) + (offset * (self.cs + (self.ecc_len*self.pages_per_cluster)))
+        
+        return self._read_cluster_from(o1)
     
     def _read_absolute_cluster(self, cluster_num) -> bytes:
-        o1 = (cluster_num * self.cs)
-        o2 = o1 + self.cs
-        return self.img[o1:o2]
+        o1 = (cluster_num * (self.cs + (self.ecc_len*self.pages_per_cluster)))
+
+        return self._read_cluster_from(o1)
+    
+    def _read_cluster_from(self, offset):
+        o1 = offset
+
+        buffer = bytes()
+
+        for i in range(self.pages_per_cluster):
+            buffer += self.img[o1:o1+self.page_size]
+            o1 += self.page_size + self.ecc_len
+
+        return buffer
     
     def _read_file(self, file):
         f = self._read_file_starting_at_cluster(file.cluster)
