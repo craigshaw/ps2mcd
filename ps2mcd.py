@@ -29,7 +29,8 @@ def set_out_dir(args) -> Path:
         out_path = Path.cwd() /  Path(args.vmc[:ext_idx]) if ext_idx != -1 else Path(args.vmc)
 
     # Make sure it exists
-    out_path.mkdir(parents=True, exist_ok=True)
+    if not args.list:
+        out_path.mkdir(parents=True, exist_ok=True)
 
     return out_path
 
