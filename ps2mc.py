@@ -3,7 +3,7 @@ import struct
 
 from directory import DirectoryEntry
 
-EXPECTED_FILE_HEADER = "Sony PS2 Memory Card Format "
+EXPECTED_FILE_IDENTIFIER = "Sony PS2 Memory Card Format "
 SUPERBLOCK_SIZE = 340
 DIRECTORY_SIZE = 512
 VALID_PAGE_SIZES = [512,1024]
@@ -20,9 +20,10 @@ class PS2MC():
             self.img = file.read()
 
         # Unpack the superblock
-        sb = struct.unpack('<28s12sHHHHIIIIII8x128s128sBBH', self.img[:SUPERBLOCK_SIZE])
+        self._unpack_superblock()
         
-        self._unpack_and_validate(sb)
+        # Validate the card
+        self._validate()
 
         # Extract the FAT
         self.fat = self._flatten_fat()
@@ -34,7 +35,10 @@ class PS2MC():
         return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_size} bytes\nCluster size: {self.cs} bytes\n' \
             f'Total files: {len(self.files)}\n' + ''.join([f'{f}\n' for f in self.files])
     
-    def _unpack_and_validate(self, sb):
+    def _unpack_superblock(self):
+        sb = struct.unpack('<28s12sHHHHIIIIII8x128s128sBBH', self.img[:SUPERBLOCK_SIZE])
+
+        self.identifier = sb[0].decode('UTF-8').rstrip('\x00')
         self.page_size = sb[2]
         self.pages_per_cluster = sb[3]
         self.pages_per_block = sb[4]
@@ -50,8 +54,9 @@ class PS2MC():
         # Work out whether we've got a card with ECCs
         self.ecc_len = 0 if len(self.img) / self.cs == self.clusters_per_card else 16
 
+    def _validate(self):
         # Validate what we've got
-        if sb[0].decode('UTF-8').rstrip('\x00') != EXPECTED_FILE_HEADER:
+        if self.identifier != EXPECTED_FILE_IDENTIFIER:
             raise UnsupportedFileTypeError("File is not a valid PS2 memory card image")
 
         if self.page_size not in VALID_PAGE_SIZES or \
