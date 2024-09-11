@@ -51,5 +51,8 @@ class DirectoryEntry():
     def is_dir(self) -> int:
         return self.mode & DF_DIRECTORY
     
+    def in_use(self):
+        return self.mode & DF_EXISTS
+    
     def to_path(self) -> Path:
         return Path(self.path) / Path(self.name)
