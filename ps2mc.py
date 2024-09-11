@@ -92,16 +92,16 @@ class PS2MC():
         return files
     
     def _read_files_recursive(self, files, cluster_num, path, length=0):
-        dirs = self._read_directory(cluster_num, path, length)
+        dirs = self._read_directory_entries(cluster_num, path, length)
         for d in dirs:
-            if d.is_file():
+            if d.is_file() and d.in_use():
                 files.append(d)
             elif d.is_dir() and d.name != '.' and d.name != '..' and d.in_use():
                 self._read_files_recursive(files, d.cluster, f'{path}{d.name}/', d.length)
 
-    def _read_directory(self, first_cluster_num, path, length):
+    def _read_directory_entries(self, first_cluster_num, path, length):
         rd = self._read_file_starting_at_cluster(first_cluster_num)
-        return self._unpack_dirs(rd, path, length)
+        return self._unpack_directory_entries(rd, path, length)
     
     def _read_file_starting_at_cluster(self, cluster_num):
         fat_idx = cluster_num
@@ -117,7 +117,7 @@ class PS2MC():
 
         return d
     
-    def _unpack_dirs(self, dbuffer, path, length):
+    def _unpack_directory_entries(self, dbuffer, path, length):
         dirs = []
 
         if length == 0:
