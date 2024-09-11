@@ -15,9 +15,9 @@ positional arguments:
 
 optional arguments:
   -h, --help         Show help
-  -d DIR, --dir DIR  Directory to output dumped files to. If not provided, save files will be extracted to a directory under the working directory with the name of the memory card being      
-                     dumped
+  -d DIR, --dir DIR  Directory to output dumped files to. If not provided, save files will be extracted to a directory under the working directory with the name of the memory card being dumped
   -l, --list         List files on VMC only, don't dump them to disk
+  -v, --version      show program's version number and exit
   ```
 
 ### Examples
@@ -48,4 +48,4 @@ Dump the files on the memory card image, `MemoryCard1-1.mc2`, to a specific dire
 ```bash
 $ ./python.py ps2mcd.py MemoryCard1-1.mc2 -d ~/Projects/PS2
 ```
-This command extracts all the directories and files from `MemoryCard1-1.mc2` and saves them in a new folder named `MemoryCard1-1`, created under the current working directory.  
+This command extracts all the directories and files from `MemoryCard1-1.mc2` and saves them in a new folder named `~/Projects/PS2/MemoryCard1-1` 
