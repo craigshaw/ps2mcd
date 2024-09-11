@@ -36,14 +36,14 @@ Total files: 6
 1305700    Dec 31 1999 15:02:06    Jul 22 2024 19:11:32    BASLUS-21274\data
 964        Jul 22 2024 19:11:33    Jul 22 2024 19:11:33    BASLUS-21274\icon.sys
 ```
-This command lists all files on the memory card image `SLUS-21284-1.mc2`, displaying each file's size, creation date, last modified date, and file path  
-
+This command lists all files on the memory card image `SLUS-21284-1.mc2`, displaying each file's size, creation date, last modified date, and file path
+***
 Dump the files on the memory card image, `Mcd001.ps2`, to a folder under the current directory
 ```bash
 $ ./python.py ps2mcd.py Mcd001.ps2
 ```
 This command extracts all the directories and files from `Mcd001.ps2` and saves them in a new folder named `Mcd001` created under the current working directory.  
-
+***
 Dump the files on the memory card image, `MemoryCard1-1.mc2`, to a specific directory
 ```bash
 $ ./python.py ps2mcd.py MemoryCard1-1.mc2 -d ~/Projects/PS2

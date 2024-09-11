@@ -5,6 +5,8 @@ import argparse
 from pathlib import Path
 from ps2mc import PS2MC
 
+VERSION = "1.0.0"
+
 def main():
     args = read_args()
 
@@ -42,6 +44,7 @@ def read_args() -> argparse.Namespace:
     parser.add_argument('-d', '--dir', type=str, help='''Directory to output dumped files to. If not provided, save files will be 
                         extracted to a directory under the working directory with the name of the memory card being dumped''')
     parser.add_argument('-l', '--list', action='store_true', help="List files on VMC only, don't dump them to disk")
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}')
     return parser.parse_args()
 
 if __name__ == "__main__":
