@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 from ps2mc import PS2MC
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 def main():
     args = read_args()
@@ -23,7 +23,7 @@ def main():
     except Exception as e:
         print(f"Failed to dump files: {e}")
 
-def set_out_dir(args) -> Path:
+def set_out_dir(args):
     if args.dir != None:    
         out_path = Path(args.dir).resolve()
     else:
@@ -36,7 +36,7 @@ def set_out_dir(args) -> Path:
 
     return out_path
 
-def read_args() -> argparse.Namespace:
+def read_args():
     parser = argparse.ArgumentParser(
         description='''ps2mcd is a command line tool that dumps save files from PS2 memory card images, making it easy to back up, 
             transfer or hack your game saves''')

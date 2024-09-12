@@ -31,7 +31,7 @@ class PS2MC():
         # Enumerate all files on the card
         self.files = self._enumerate_all_files()
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f'Card: {self.path}\nSize: {len(self.img)} bytes\nPage size: {self.page_size} bytes\nCluster size: {self.cs} bytes\n' \
             f'Total files: {len(self.files)}\n' + ''.join([f'{f}\n' for f in self.files])
     
@@ -64,7 +64,7 @@ class PS2MC():
            self.page_size == 1024 and self.pages_per_cluster != 1:
                raise UnsupportedFileTypeError("Unsupported memory card geometry")
 
-    def _flatten_fat(self) -> list:
+    def _flatten_fat(self):
         fat = []
 
         # For each ifc table entry currently in use
@@ -140,7 +140,7 @@ class PS2MC():
         
         return self._read_cluster_from(o1)
     
-    def _read_absolute_cluster(self, cluster_num) -> bytes:
+    def _read_absolute_cluster(self, cluster_num):
         o1 = (cluster_num * (self.cs + (self.ecc_len*self.pages_per_cluster)))
 
         return self._read_cluster_from(o1)
