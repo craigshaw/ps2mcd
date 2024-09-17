@@ -40,12 +40,12 @@ This command lists all files on the memory card image `SLUS-21284-1.mc2`, displa
 ***
 Dump the files on the memory card image, `Mcd001.ps2`, to a folder under the current directory
 ```bash
-$ ./python.py ps2mcd.py Mcd001.ps2
+$ ./ps2mcd.py Mcd001.ps2
 ```
 This command extracts all the directories and files from `Mcd001.ps2` and saves them in a new folder named `Mcd001` created under the current working directory.  
 ***
 Dump the files on the memory card image, `MemoryCard1-1.mc2`, to a specific directory
 ```bash
-$ ./python.py ps2mcd.py MemoryCard1-1.mc2 -d ~/Projects/PS2
+$ ./ps2mcd.py MemoryCard1-1.mc2 -d ~/Projects/PS2
 ```
 This command extracts all the directories and files from `MemoryCard1-1.mc2` and saves them in a new folder named `~/Projects/PS2/MemoryCard1-1` 
