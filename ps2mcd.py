@@ -5,34 +5,32 @@ import argparse
 from pathlib import Path
 from ps2mc import PS2MC
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 def main():
     args = read_args()
 
     try:
-        out_dir = set_out_dir(args)
-
         mc = PS2MC(args.vmc)
 
         if args.list:
             print(mc)
         else:
+            out_dir = set_out_dir(args.dir, args.vmc)
             mc.write_all_to_disk(out_dir)
 
     except Exception as e:
         print(f"Failed to dump files: {e}")
 
-def set_out_dir(args):
-    if args.dir != None:    
-        out_path = Path(args.dir).resolve()
+def set_out_dir(dir, vmc):
+    if dir != None:    
+        out_path = Path(dir).resolve()
     else:
-        ext_idx = args.vmc.find('.')
-        out_path = Path.cwd() /  Path(args.vmc[:ext_idx]) if ext_idx != -1 else Path(args.vmc)
+        ext_idx = vmc.find('.')
+        out_path = Path.cwd() /  Path(vmc[:ext_idx]) if ext_idx != -1 else Path(vmc)
 
     # Make sure it exists
-    if not args.list:
-        out_path.mkdir(parents=True, exist_ok=True)
+    out_path.mkdir(parents=True, exist_ok=True)
 
     return out_path
 

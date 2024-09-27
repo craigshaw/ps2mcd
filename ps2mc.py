@@ -52,7 +52,7 @@ class PS2MC():
         self.cs = self.page_size * self.pages_per_cluster
 
         # Work out whether we've got a card with ECCs
-        self.ecc_len = 0 if len(self.img) / self.cs == self.clusters_per_card else 16
+        self.ecc_len = 0 if len(self.img) / self.cs == self.clusters_per_card else ECC_SIZE
 
     def _validate(self):
         # Validate what we've got
