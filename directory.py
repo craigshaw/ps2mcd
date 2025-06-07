@@ -30,7 +30,7 @@ class DirectoryEntry():
     def __str__(self):
         return f'{self.length:<10} {time.strftime("%b %d %Y %H:%M:%S", self.created):<23}' \
             f' {time.strftime("%b %d %Y %H:%M:%S", self.modified):<23} {self.to_path()}'
-    
+
     def _to_local_time(self, t):
         # Time of Day (8 bytes)
         # Offset	Name	Type	Description
@@ -47,12 +47,12 @@ class DirectoryEntry():
 
     def is_file(self):
         return self.mode & DF_FILE
-    
+
     def is_dir(self):
         return self.mode & DF_DIRECTORY
-    
+
     def in_use(self):
         return self.mode & DF_EXISTS
-    
+
     def to_path(self):
         return Path(self.path) / Path(self.name)

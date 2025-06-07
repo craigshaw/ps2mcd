@@ -1,18 +1,3 @@
-
-"""
-ps2mc.py - PlayStation 2 Memory Card
-
-This module provides the PS2MC classwith functionality for parsing, validating, and extracting files from Sony PlayStation 2 
-memory card images. It supports reading the superblock, validating the card format, extracting the File Allocation Table (FAT), 
-enumerating all files and directories stored on the card. 
-
-Classes:
-    PS2MC: Main class for interacting with PS2 memory card images.
-    UnsupportedFileTypeError: Exception raised for unsupported or invalid card images.
-
-Usage:
-    Instantiate the PS2MC class with the path to a memory card image file to access its contents and extract files.
-"""
 import array
 import struct
 
@@ -25,31 +10,9 @@ VALID_PAGE_SIZES = [512,1024]
 ECC_SIZE = 16
 
 class UnsupportedFileTypeError(Exception):
-    """
-    Exception raised when an unsupported file type is encountered.
-    """
+    pass
 
 class PS2MC():
-    """
-    Class representing a PlayStation 2 memory card image.
-    Provides methods to read, validate, and extract files from the card image.
-    Attributes:
-        path (str): Path to the memory card image file.
-        img (bytes): Raw image data of the memory card.
-        identifier (str): Identifier string from the superblock.
-        page_size (int): Size of a page in bytes.
-        pages_per_cluster (int): Number of pages per cluster.
-        pages_per_block (int): Number of pages per block.
-        clusters_per_card (int): Total number of clusters on the card.
-        alloc_offset (int): Offset for allocation in the image.
-        alloc_end (int): End offset for allocation in the image.
-        dir_root (int): Root directory cluster number.
-        ifc_table (array.array): Indirect FAT cluster table.
-        cs (int): Cluster size in bytes.
-        ecc_len (int): Length of ECC, if applicable.
-        fat (list[int]): Flattened File Allocation Table.
-        files (list[DirectoryEntry]): List of files and directories on the card.
-    """
     def __init__(self, path):
         self.path = path
 
